@@ -1,0 +1,25 @@
+<Main output=b aux=x,y,sum,final>
+    =>x 1
+    => y 2
+    => final 'Completed'
+    =>sum <ProcessSum input[x,y]/>
+    =err><Log input=err/>
+    =><Log input=final/>
+
+    =>x 1
+    => y 2
+    => final 'Completed'
+    =>sum <ProcessSum input=x,y/>
+        STOP PROGRAM AND SHOW ERROR
+    =><Log input=final/>
+</Main>
+
+<ProcessSum input=a,b output=c aux=text>
+    =>text = 'Hello'
+    =><Log input=text/>
+    =>c=a+b
+</ProcessSum>
+
+<Log input=data>
+    program.write(data)
+</Log>
