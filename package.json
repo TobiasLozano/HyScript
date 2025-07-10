@@ -16,5 +16,8 @@
     "url": "https://github.com/TobiasLozano/HyScript/issues"
   },
   "homepage": "https://github.com/TobiasLozano/HyScript#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
