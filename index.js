@@ -13,14 +13,13 @@ function runEsolang(code) {
     const tokens = clean(code);
     const process = (0, get_process_attributes_1.default)(tokens, "Main");
     const processFlow = (0, get_process_flow_1.default)(tokens, process);
-    console.log(process, processFlow);
     (0, run_process_1.default)(process, processFlow);
 }
 runEsolang(`
    <Main output b aux x y sum final>
     => assign x 2
-    => assign y 3
-    => operate sum x - y + x
+    => assign y 8
+    => operate sum 'hola-' + 'tobias' 
     => assign final 'Completed'
     => call sum <ProcessSum input[x,y]/>
     => err log err
