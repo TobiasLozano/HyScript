@@ -1,95 +1,36 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const get_process_attributes_1 = __importDefault(require("./parser/get-process-attributes"));
+const get_process_flow_1 = __importDefault(require("./parser/get-process-flow"));
+const run_process_1 = __importDefault(require("./parser/run-process"));
 function clean(code) {
     return code.trim().split("").join("");
 }
-function getProcessAttributes(code, processName) {
-    const hasProcess = code.includes(`<${processName}`) && code.includes(`</${processName}>`);
-    if (!hasProcess) {
-        throw (`The program doesn't have a ${processName} function`);
-    }
-    const indexStart = code.indexOf(`<${processName}`);
-    const indexClose = code.indexOf(">", indexStart);
-    const openTag = code.slice(indexStart, indexClose);
-    const openTagTokens = openTag.split(" ");
-    let name = "";
-    const outputVars = [];
-    const inputVars = [];
-    const auxVars = [];
-    let currentTokenType = "name";
-    openTagTokens.forEach((token) => {
-        const regExVarName = /^[a-zA-Z]+$/;
-        if (currentTokenType !== "name" && !regExVarName.test(token)) {
-            throw (`error in  ${currentTokenType} var with name ${token}`);
-        }
-        switch (currentTokenType) {
-            case "output":
-                outputVars.push({
-                    name: token,
-                    value: null,
-                });
-                break;
-            case "input":
-                inputVars.push({
-                    name: token,
-                    value: null,
-                });
-                break;
-            case "aux":
-                auxVars.push({
-                    name: token,
-                    value: null,
-                });
-                break;
-            case "name":
-                name = token;
-                break;
-            default:
-                break;
-        }
-        if (["output", "input", "aux"].includes(token)) {
-            currentTokenType = token;
-        }
-    });
-    const process = { name, outputVars, inputVars, auxVars };
-    console.log(process);
-}
-function getProcessFlow(code, processName) {
-    const hasMain = code.includes(`<${processName}`) && code.includes(`</${processName}>`);
-    if (!hasMain) {
-        throw (`The program doesn't have a ${processName} function`);
-    }
-    const indexStart = code.indexOf(`<${processName}`);
-    const indexClose = code.indexOf(">", indexStart);
-    const indexEndTag = code.indexOf(`</${processName}>`, indexStart);
-    console.log(code);
-    const processFlow = code.slice(indexClose + 2, indexEndTag);
-    console.log(processFlow);
-    const processSteps = processFlow.split('=>');
-    console.log(processSteps.map((e) => e.trim()));
-}
 function runEsolang(code) {
     const tokens = clean(code);
-    getProcessAttributes(tokens, "Main");
-    getProcessFlow(tokens, "Main");
+    const process = (0, get_process_attributes_1.default)(tokens, "Main");
+    const processFlow = (0, get_process_flow_1.default)(tokens, process);
+    console.log(process, processFlow);
+    (0, run_process_1.default)(process, processFlow);
 }
 runEsolang(`
    <Main output b aux x y sum final>
     => assign x 2
-    => assign  y 2
-    => assign  final 'Completed'
-    => assign sum <ProcessSum input[x,y]/>
-    => err <Log input=err/>
-    => assign <Log input=final/>
-    => assign x 1
-    => assign  y 2
-    => assign  final 'Completed'
-    => assign sum <ProcessSum input=x,y/>
+    => assign y 3
+    => operate sum x - y + x
+    => assign final 'Completed'
+    => call sum <ProcessSum input[x,y]/>
+    => err log err
+    => assign b 1
     => log final
 </Main>
 <ProcessSum input=a,b output=c aux=text>
     => assign text = 'Hello'
     =>log text
-    => assign c=a+b
+    => operate c a + b
 </ProcessSum>`);
 // FLOW
 /*
