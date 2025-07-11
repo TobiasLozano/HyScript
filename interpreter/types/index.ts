@@ -9,8 +9,14 @@ export interface Process {
   inputVars: Variable[];
   auxVars: Variable[];
 }
-export type StepType= 'assign' | 'log' | 'err' | 'operate'|'call'
-export interface ProcessStep{
-  type:StepType;
-  instruction:string
+export type StepType = "assign" | "log" | "err" | "operate" | "call";
+export interface ProcessStep {
+  type: StepType;
+  instruction: string;
+}
+
+export type LogType = "log" | "catch" | "error";
+export interface ProcessLog{
+  type:LogType,
+  value :string
 }

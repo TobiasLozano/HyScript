@@ -1,26 +1,25 @@
 import getProcessAttributes from "./parser/get-process-attributes";
 import getProcessFlow from "./parser/get-process-flow";
 import runProcess from "./parser/run-process";
+import type { ProcessLog } from "./types";
 
 function clean(code: string) {
   return code.trim().split("").join("");
 }
 
-
-export function runEsolang(code: string) {
- try {
-  
-   const tokens = clean(code);
-   const process = getProcessAttributes(tokens, "Main");
-   const processFlow = getProcessFlow(tokens, process);
-   runProcess(process,processFlow,code,[])
+export function runEsolang(code: string, addLog: (log: ProcessLog) => void) {
+  try {
+    const tokens = clean(code);
+    const process = getProcessAttributes(tokens, "Main");
+    const processFlow = getProcessFlow(tokens, process);
+    runProcess(process, processFlow, code, [], addLog);
   } catch (error) {
-    console.log(`\x1b[41m ${error} \x1b[0m`)
+    addLog({
+      type: "error",
+      value: `Uncaught error:${error} \x1b`,
+    });
   }
-  
 }
-
-
 
 // FLOW
 /* 

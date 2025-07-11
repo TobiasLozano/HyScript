@@ -1,57 +1,78 @@
-import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import {runEsolang} from '../interpreter/index'
-import './App.css'
+import { useState, type ChangeEvent } from "react";
+import { runEsolang } from "../interpreter/index";
+import "./App.css";
+import type { ProcessLog } from "../interpreter/types";
+import { baseExample } from "./examples";
 
 function App() {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-   runEsolang(`
-   <Main output b aux x y sum final>
-    => assign x 2
-    => assign y 5
-    => err log err
-    => assign final 'Completed'
-    => call sum <=ProcessSum input x, y>
-    => assign b 'skkk'
-    => log final
-</Main>
-<ProcessSum input x y output sum aux text>
-    => assign text 'Hello'
-    => log 'text'
-    => log text
-    => operate sum x + y
-    => log 'sum is' 
-    => log sum
-</ProcessSum>`);
-  }, [])
+  const [logs, setLogs] = useState<ProcessLog[]>([]);
+  const [code, setCode] = useState(baseExample)
+  const [command, setCommand] = useState("");
+  const addLog = (log: ProcessLog) => {
+    setLogs((prev) => {
+      const newLog: ProcessLog = {
+        type: log.type,
+        value: `${log.value} \x1b`,
+      };
+      return [...prev, newLog];
+    });
+  };
+
+  const handleCode = (e:ChangeEvent<HTMLTextAreaElement>)=>{
+   setCode(e.target.value);
+
+  }
   
+  const writeCommand = async () => {
+    setCommand("");
+    const text = "run index.hs";
+    const letters = text.split("");
+    for (let i = 0; i < letters.length; i++) {
+      const letter = letters[i];
+      setTimeout(() => {
+        setCommand((prev) => `${prev}${letter}`);
+      }, 100*(i+1));
+    }
+  };
+
+  const handleRun = async () => {
+    await writeCommand();
+    setLogs([]);
+      setTimeout(() => {
+
+    runEsolang(code,
+      addLog
+    )},2000);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <main>
+      <h2>HyScript playground</h2>
+      <div className="playground">
+        <div className="editor">
+          <div className="code">
+            <textarea rows={20} style={{ width: "90%" }} value={code} onChange={handleCode}></textarea>
+          </div>
+          <button onClick={() => handleRun()}>Run program</button>
+        </div>
+        <div className="output">
+          <div className="command">
+            <span className="machine">tobias@thinkbook-g6</span>
+            <span className="decorator">{" ~ "}</span>
+            <span className="detail">{command}</span>
+          </div>
+
+          {logs.map((log) => {
+            return (
+              <div className={log.type}>
+                 {log.value}
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </main>
+  );
 }
 
-export default App
+export default App;

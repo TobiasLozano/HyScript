@@ -1,5 +1,5 @@
 import { CatchedError } from "../errors";
-import { Process, ProcessStep, Variable } from "../types";
+import type { Process, ProcessLog, ProcessStep, Variable } from "../types";
 import clearQuotes from "../utils/clean-quote";
 import getProcessAttributes from "./get-process-attributes";
 import getProcessFlow from "./get-process-flow";
@@ -45,7 +45,6 @@ const setVar = (varName: string, _value: string, process: Process) => {
     const valueToLog = _value.split(" ")[0];
 
     if (!isNaN(Number(valueToLog))) {
-      console.log(valueToLog);
       value = valueToLog;
     } else if (getVar(valueToLog, process)) {
       value = clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? "");
@@ -75,8 +74,8 @@ const setVar = (varName: string, _value: string, process: Process) => {
   return process;
 };
 
-const operate = (varName: string, instruction: string, process: Process) => {
-  let operation = instruction.split(" ").slice(1);
+const operate = (_varName: string, instruction: string, process: Process) => {
+  const operation = instruction.split(" ").slice(1);
   let operator: string | null = null;
   const operators = ["+", "-", "*", "/"];
   let result = "";
@@ -85,7 +84,6 @@ const operate = (varName: string, instruction: string, process: Process) => {
       return (operator = token);
     }
     const _var = getVar(token, process);
-
 
     if (_var) {
       if (_var.value === null) {
@@ -97,11 +95,10 @@ const operate = (varName: string, instruction: string, process: Process) => {
       if (operator === "+") {
         operator = null;
         if (!isNaN(Number(result)) && !isNaN(Number(_var.value))) {
-          
           return (result = (Number(result) + Number(_var.value)).toString());
         }
 
-        return (result = `'${(result + _var.value)}'`);
+        return (result = `'${result + _var.value}'`);
       }
       if (operator === "-") {
         operator = null;
@@ -185,7 +182,8 @@ export default function runProcess(
   _process: Process,
   steps: ProcessStep[],
   code: string,
-  inputVars: Variable[]
+  inputVars: Variable[],
+ addLog: (log: ProcessLog) => void
 ) {
   let process = { ..._process };
   if (inputVars) {
@@ -231,7 +229,7 @@ export default function runProcess(
           if (!getVar(varName, process)) {
             throw `Variable ${varName} doesn't exists`;
           } else {
-            let operation: string | number = instruction
+            const operation: string | number = instruction
               .split(" ")
               .slice(1)
               .join(" ");
@@ -249,34 +247,43 @@ export default function runProcess(
           }
           break;
 
-        case "log":
+        case "log": {
           const isString = /'(.*?)'/.test(instruction);
           if (isString) {
-            console.log(clearQuotes(instruction));
+           addLog( { 
+                type: "log",
+                value: clearQuotes(instruction),
+              });
             break;
           }
           const valueToLog = instruction.split(" ")[0];
 
           if (!isNaN(Number(valueToLog))) {
-            console.log(valueToLog);
+           addLog({
+                type: "log",
+                value: valueToLog,
+              });
             break;
           }
           if (getVar(valueToLog, process)) {
-            console.log(
-              clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? "")
-            );
+             addLog(  {
+                type: "log",
+                value:  clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? ""),
+              } );
+           
             break;
           }
 
           throw `Error logging value, Invalid symbol ${valueToLog}`;
           break;
+        }
 
         case "call":
           varName = instruction.split(" ")[0];
           if (!getVar(varName, process)) {
             throw `Variable ${varName} doesn't exists`;
           } else {
-            let operation: string | number = instruction
+            const operation: string | number = instruction
               .split(" ")
               .slice(1)
               .join(" ");
@@ -291,7 +298,7 @@ export default function runProcess(
               const childProcess = runProcess(_callProcess, _steps, code, [
                 ...process.inputVars,
                 ...process.auxVars,
-              ]);
+              ],addLog);
               const _outputVar = childProcess.outputVars.find(
                 (e) => e.name === varName
               );
@@ -313,7 +320,11 @@ export default function runProcess(
       }
 
       if (error instanceof CatchedError) {
-        console.log(`\x1b[43m CatchedError ${lastError}\x1b[0m`);
+           addLog  ({
+                type: "catch",
+                value: `CatchedError: ${lastError}`,
+              } );
+           
         lastError = null;
       } else {
         lastError = null;
@@ -321,6 +332,6 @@ export default function runProcess(
       }
     }
   });
-  // console.log(process);
+  // setLogs(process);
   return process;
 }
