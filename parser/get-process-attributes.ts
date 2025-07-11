@@ -12,7 +12,7 @@ export default function getProcessAttributes(
   const indexStart = code.indexOf(`<${processName}`);
   const indexClose = code.indexOf(">", indexStart);
   const openTag = code.slice(indexStart+1, indexClose);
-
+  
   const openTagTokens = openTag.split(" ");
   let name = "";
   const outputVars: Variable[] = [];
@@ -26,18 +26,27 @@ export default function getProcessAttributes(
     }
     switch (currentTokenType) {
       case "output":
+        if(token==="input"||token==="aux"){
+          break
+        }
         outputVars.push({
           name: token,
           value: null,
         });
         break;
       case "input":
+        if(token==="output"||token==="aux"){
+          break
+        }
         inputVars.push({
           name: token,
           value: null,
         });
         break;
       case "aux":
+          if(token==="input"||token==="output"){
+          break
+        }
         auxVars.push({
           name: token,
           value: null,

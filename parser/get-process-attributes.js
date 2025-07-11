@@ -22,18 +22,27 @@ function getProcessAttributes(code, processName) {
         }
         switch (currentTokenType) {
             case "output":
+                if (token === "input" || token === "aux") {
+                    break;
+                }
                 outputVars.push({
                     name: token,
                     value: null,
                 });
                 break;
             case "input":
+                if (token === "output" || token === "aux") {
+                    break;
+                }
                 inputVars.push({
                     name: token,
                     value: null,
                 });
                 break;
             case "aux":
+                if (token === "input" || token === "output") {
+                    break;
+                }
                 auxVars.push({
                     name: token,
                     value: null,

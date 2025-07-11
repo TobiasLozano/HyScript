@@ -11,24 +11,26 @@ function runEsolang(code: string) {
   const tokens = clean(code);
   const process = getProcessAttributes(tokens, "Main");
   const processFlow = getProcessFlow(tokens, process);
-  runProcess(process,processFlow)
+  runProcess(process,processFlow,code,[])
 }
 
 runEsolang(`
    <Main output b aux x y sum final>
     => assign x 2
     => assign y 8
-    => operate sum 'hola-' + 'tobias' 
     => assign final 'Completed'
-    => call sum <ProcessSum input[x,y]/>
+    => call sum <=ProcessSum input x, y>
     => err log err
     => assign b 1
     => log final
 </Main>
-<ProcessSum input=a,b output=c aux=text>
-    => assign text = 'Hello'
-    =>log text
-    => operate c a + b
+<ProcessSum input x y output sum aux text>
+    => assign text 'Hello'
+    => log 'text'
+    => log text
+    => operate sum x + y
+    => log 'sum is' 
+    => log sum
 </ProcessSum>`);
 
 // FLOW

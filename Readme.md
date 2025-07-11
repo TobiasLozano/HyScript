@@ -16,11 +16,10 @@ body tag: proccess
 ***
 ## FLOW EXAMPLE
 ``` xml
-`
- <Main output b aux x y sum final>
+<Main output b aux x y sum final>
     => assign x 2
-    => assign y 3
-    => operate sum x - y + x
+    => assign y 8
+    => operate sum 'hola-' + 'tobias' 
     => assign final 'Completed'
     => call sum <ProcessSum input[x,y]/>
     => err log err
