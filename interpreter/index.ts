@@ -7,7 +7,7 @@ function clean(code: string) {
 }
 
 
-function runEsolang(code: string) {
+export function runEsolang(code: string) {
  try {
   
    const tokens = clean(code);
@@ -20,24 +20,7 @@ function runEsolang(code: string) {
   
 }
 
-runEsolang(`
-   <Main output b aux x y sum final>
-    => assign x 'sisis0'
-    => assign y '2sksk'
-    => err log err
-    => assign final 'Completed'
-    => call sum <=ProcessSum input x, y>
-    => assign b 'skkk'
-    => log final
-</Main>
-<ProcessSum input x y output sum aux text>
-    => assign text 'Hello'
-    => log 'text'
-    => log text
-    => operate sum x + y
-    => log 'sum is' 
-    => log sum
-</ProcessSum>`);
+
 
 // FLOW
 /* 
