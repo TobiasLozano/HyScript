@@ -1,3 +1,4 @@
+import { CatchedError } from "../errors";
 import { Process, ProcessStep, Variable } from "../types";
 import clearQuotes from "../utils/clean-quote";
 import getProcessAttributes from "./get-process-attributes";
@@ -31,12 +32,28 @@ const validateProcessInvocation = (
   if (process) {
     return process;
   } else {
-    console.error("Process not found");
+    throw "Process not found";
     return;
   }
 };
 const setVar = (varName: string, _value: string, process: Process) => {
-  const value = clearQuotes(_value);
+  let value = _value;
+  const isString = /'(.*?)'/.test(_value);
+  if (isString) {
+    value = _value;
+  } else {
+    const valueToLog = _value.split(" ")[0];
+
+    if (!isNaN(Number(valueToLog))) {
+      console.log(valueToLog);
+      value = valueToLog;
+    } else if (getVar(valueToLog, process)) {
+      value = clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? "");
+    } else {
+      throw `Invalid value ${valueToLog} for variable '${varName}'`;
+    }
+  }
+
   process.auxVars.map((_var) => {
     if (_var.name === varName) {
       _var.value = value;
@@ -69,9 +86,10 @@ const operate = (varName: string, instruction: string, process: Process) => {
     }
     const _var = getVar(token, process);
 
+
     if (_var) {
       if (_var.value === null) {
-        console.error(`Variable ${_var.name} is null`);
+        throw `Variable ${_var.name} is null`;
       }
       if (result === "") {
         return (result = _var.value?.toString() ?? "");
@@ -79,21 +97,19 @@ const operate = (varName: string, instruction: string, process: Process) => {
       if (operator === "+") {
         operator = null;
         if (!isNaN(Number(result)) && !isNaN(Number(_var.value))) {
+          
           return (result = (Number(result) + Number(_var.value)).toString());
         }
-        return (result = (result + _var.value).toString());
+
+        return (result = `'${(result + _var.value)}'`);
       }
       if (operator === "-") {
         operator = null;
         if (isNaN(Number(result))) {
-          console.error(
-            `Invalid operation '${operator}' operation with type ${typeof result}`
-          );
+          throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
         if (isNaN(Number(_var.value))) {
-          console.error(
-            `Invalid operation '${operator}' for variable with type ${typeof _var.name}`
-          );
+          throw `Invalid operation '${operator}' for variable with type ${typeof _var.name}`;
         } else {
           return (result = (Number(result) - Number(_var.value)).toString());
         }
@@ -101,14 +117,10 @@ const operate = (varName: string, instruction: string, process: Process) => {
       if (operator === "*") {
         operator = null;
         if (isNaN(Number(result))) {
-          console.error(
-            `Invalid operation '${operator}' operation with type ${typeof result}`
-          );
+          throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
         if (isNaN(Number(_var.value))) {
-          console.error(
-            `Invalid operation '${operator}' for variable with type ${typeof _var.name}`
-          );
+          throw `Invalid operation '${operator}' for variable with type ${typeof _var.name}`;
         } else {
           return (result = (Number(result) * Number(_var.value)).toString());
         }
@@ -116,14 +128,10 @@ const operate = (varName: string, instruction: string, process: Process) => {
       if (operator === "/") {
         operator = null;
         if (isNaN(Number(result))) {
-          console.error(
-            `Invalid operation '${operator}' operation with type ${typeof result}`
-          );
+          throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
         if (isNaN(Number(_var.value))) {
-          console.error(
-            `Invalid operation '${operator}' for variable with type ${typeof _var.name}`
-          );
+          throw `Invalid operation '${operator}' for variable with type ${typeof _var.name}`;
         } else {
           return (result = (Number(result) / Number(_var.value)).toString());
         }
@@ -147,9 +155,7 @@ const operate = (varName: string, instruction: string, process: Process) => {
       if (operator === "-") {
         operator = null;
         if (isNaN(Number(result))) {
-          console.error(
-            `Invalid operation '${operator}' operation with type ${typeof result}`
-          );
+          throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
 
         return (result = (Number(result) - Number(token)).toString());
@@ -167,7 +173,7 @@ const operate = (varName: string, instruction: string, process: Process) => {
         return (result = result + clearQuotes(token));
       }
     } else {
-      console.error(`Invalid symbol ${token}`);
+      throw `Invalid symbol ${token}`;
     }
     return token;
   }, "");
@@ -179,121 +185,142 @@ export default function runProcess(
   _process: Process,
   steps: ProcessStep[],
   code: string,
-  inputVars:Variable[]
+  inputVars: Variable[]
 ) {
-
   let process = { ..._process };
-    if(inputVars){
-      inputVars.forEach((variable)=>{
-        const {name:varName,value:_value}= variable
+  if (inputVars) {
+    inputVars.forEach((variable) => {
+      const { name: varName, value: _value } = variable;
 
-     const value = clearQuotes(_value?.toString()??'');
-  process.auxVars.map((_var) => {
-    if (_var.name === varName) {
-      _var.value = value;
-    }
-    return _var;
-  });
-  process.inputVars.map((_var) => {
-    if (_var.name === varName) {
-      _var.value = value;
-    }
-    return _var;
-  });
-  process.outputVars.map((_var) => {
-    if (_var.name === varName) {
-      _var.value = value;
-    }
-    return _var;
-      })
-
-  });
+      const value = clearQuotes(_value?.toString() ?? "");
+      process.auxVars.map((_var) => {
+        if (_var.name === varName) {
+          _var.value = value;
+        }
+        return _var;
+      });
+      process.inputVars.map((_var) => {
+        if (_var.name === varName) {
+          _var.value = value;
+        }
+        return _var;
+      });
+      process.outputVars.map((_var) => {
+        if (_var.name === varName) {
+          _var.value = value;
+        }
+        return _var;
+      });
+    });
   }
+  let lastError: unknown;
+
   steps.forEach((step) => {
     const { type, instruction } = step;
     let varName = "";
-    switch (type) {
-      case "assign":
-        varName = instruction.split(" ")[0];
-        if (!getVar(varName, process)) {
-          console.error(`Variable ${varName} doesn't exists`);
-        } else {
-          let operation: string | number = instruction
-            .split(" ")
-            .slice(1)
-            .join(" ");
+    try {
+      if (lastError && type !== "err") {
+        throw lastError;
+      }
+      if (lastError) {
+        throw new CatchedError(lastError as string);
+      }
+      switch (type) {
+        case "assign":
+          varName = instruction.split(" ")[0];
+          if (!getVar(varName, process)) {
+            throw `Variable ${varName} doesn't exists`;
+          } else {
+            let operation: string | number = instruction
+              .split(" ")
+              .slice(1)
+              .join(" ");
 
-          process = setVar(varName, operation, process);
-        }
-        break;
-      case "operate":
-        varName = instruction.split(" ")[0];
-        if (!getVar(varName, process)) {
-          console.error(`Variable ${varName} doesn't exists`);
-        } else {
-          const result = operate(varName, instruction, process);
-          setVar(varName, result, process);
-        }
-        break;
-
-      case "log":
-        const isString = /'(.*?)'/.test(instruction);
-        if (isString) {
-          console.log(clearQuotes(instruction));
-          break;
-        }
-        const valueToLog = instruction.split(" ")[0];
-
-        if (!isNaN(Number(valueToLog))) {
-          console.log(valueToLog);
-          break;
-        }
-        if (getVar(valueToLog, process)) {
-          console.log(
-            clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? "")
-          );
-          break;
-        }
-
-        console.error(`Error logging value, Invalid symbol ${valueToLog}`);
-        break;
-      case "err":
-        break;
-
-      case "call":
-        varName = instruction.split(" ")[0];
-        if (!getVar(varName, process)) {
-          console.error(`Variable ${varName} doesn't exists`);
-        } else {
-          let operation: string | number = instruction
-            .split(" ")
-            .slice(1)
-            .join(" ");
-          const _callProcess = validateProcessInvocation(
-            varName,
-            operation,
-            code
-          );
-          if (_callProcess) {
-            const _steps = getProcessFlow(code, _callProcess);
-
-            const childProcess=runProcess(_callProcess, _steps, code, [...process.inputVars,...process.auxVars]);
-            const _outputVar = childProcess.outputVars.find(e=>e.name===varName)
-            
-            if(_outputVar!==undefined){
-              const varValue= _outputVar.value?.toString()??''
-
-              
-              process = setVar(varName,varValue,process)
-            }
-            
+            process = setVar(varName, operation, process);
           }
-        }
-        break;
-      default:
-        break;
+          break;
+        case "operate":
+          varName = instruction.split(" ")[0];
+          if (!getVar(varName, process)) {
+            throw `Variable ${varName} doesn't exists`;
+          } else {
+            const result = operate(varName, instruction, process);
+            setVar(varName, result, process);
+          }
+          break;
+
+        case "log":
+          const isString = /'(.*?)'/.test(instruction);
+          if (isString) {
+            console.log(clearQuotes(instruction));
+            break;
+          }
+          const valueToLog = instruction.split(" ")[0];
+
+          if (!isNaN(Number(valueToLog))) {
+            console.log(valueToLog);
+            break;
+          }
+          if (getVar(valueToLog, process)) {
+            console.log(
+              clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? "")
+            );
+            break;
+          }
+
+          throw `Error logging value, Invalid symbol ${valueToLog}`;
+          break;
+
+        case "call":
+          varName = instruction.split(" ")[0];
+          if (!getVar(varName, process)) {
+            throw `Variable ${varName} doesn't exists`;
+          } else {
+            let operation: string | number = instruction
+              .split(" ")
+              .slice(1)
+              .join(" ");
+            const _callProcess = validateProcessInvocation(
+              varName,
+              operation,
+              code
+            );
+            if (_callProcess) {
+              const _steps = getProcessFlow(code, _callProcess);
+
+              const childProcess = runProcess(_callProcess, _steps, code, [
+                ...process.inputVars,
+                ...process.auxVars,
+              ]);
+              const _outputVar = childProcess.outputVars.find(
+                (e) => e.name === varName
+              );
+
+              if (_outputVar !== undefined) {
+                const varValue = _outputVar.value?.toString() ?? "";
+
+                process = setVar(varName, varValue, process);
+              }
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      if (!lastError) {
+        return (lastError = error);
+      }
+
+      if (error instanceof CatchedError) {
+        console.log(`\x1b[43m CatchedError ${lastError}\x1b[0m`);
+        lastError = null;
+      } else {
+        lastError = null;
+        throw error;
+      }
     }
   });
-console.log(process);
+  // console.log(process);
   return process;
 }

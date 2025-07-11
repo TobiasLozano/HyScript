@@ -8,20 +8,26 @@ function clean(code: string) {
 
 
 function runEsolang(code: string) {
-  const tokens = clean(code);
-  const process = getProcessAttributes(tokens, "Main");
-  const processFlow = getProcessFlow(tokens, process);
-  runProcess(process,processFlow,code,[])
+ try {
+  
+   const tokens = clean(code);
+   const process = getProcessAttributes(tokens, "Main");
+   const processFlow = getProcessFlow(tokens, process);
+   runProcess(process,processFlow,code,[])
+  } catch (error) {
+    console.log(`\x1b[41m ${error} \x1b[0m`)
+  }
+  
 }
 
 runEsolang(`
    <Main output b aux x y sum final>
-    => assign x 2
-    => assign y 8
+    => assign x 'sisis0'
+    => assign y '2sksk'
+    => err log err
     => assign final 'Completed'
     => call sum <=ProcessSum input x, y>
-    => err log err
-    => assign b 1
+    => assign b 'skkk'
     => log final
 </Main>
 <ProcessSum input x y output sum aux text>

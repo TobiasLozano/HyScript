@@ -15,7 +15,7 @@ function getProcessFlow(code, process) {
     const processSteps = _processSteps.map((step) => {
         const [stepType, ...instruction] = step.split(' ');
         if (!["assign", "log", "err", "operate", "call"].includes(stepType)) {
-            console.error(`${stepType} on process ${processName} is not a valid operation`);
+            throw (`${stepType} on process ${processName} is not a valid operation`);
         }
         return {
             type: step.split(' ')[0],
