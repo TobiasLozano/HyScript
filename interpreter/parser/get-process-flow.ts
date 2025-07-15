@@ -1,4 +1,4 @@
-import { Process, ProcessStep, StepType } from "../types";
+import type { Process, ProcessStep, StepType } from "../types";
 
 export default function getProcessFlow(code: string, process: Process) {
   const processName = process.name;

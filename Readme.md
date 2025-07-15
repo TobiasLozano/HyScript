@@ -2,6 +2,9 @@
 
 HyScript is a programming language that uses hypertext-like tags (similar to HTML) for defining functions and processes. It is designed for clear process flow, variable management, and error handling.
 
+## HyScript Playground
+https://hyscript.netlify.app/
+
 ---
 
 ## Table of Contents
