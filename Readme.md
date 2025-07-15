@@ -1,5 +1,8 @@
 # HyScript
 
+![Alt text](https://hackatime-badge.hackclub.com/U092B83CCMN/HyScript)
+
+
 HyScript is a programming language that uses hypertext-like tags (similar to HTML) for defining functions and processes. It is designed for clear process flow, variable management, and error handling.
 
 ## HyScript Playground
