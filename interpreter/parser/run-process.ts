@@ -80,6 +80,7 @@ const operate = (_varName: string, instruction: string, process: Process) => {
   const operators = ["+", "-", "*", "/"];
   let result = "";
   operation.forEach((token) => {
+    
     if (operators.includes(token)) {
       return (operator = token);
     }
@@ -93,43 +94,42 @@ const operate = (_varName: string, instruction: string, process: Process) => {
         return (result = _var.value?.toString() ?? "");
       }
       if (operator === "+") {
-        operator = null;
         if (!isNaN(Number(result)) && !isNaN(Number(_var.value))) {
           return (result = (Number(result) + Number(_var.value)).toString());
         }
-
+        operator = null;
         return (result = `'${result + _var.value}'`);
       }
       if (operator === "-") {
-        operator = null;
         if (isNaN(Number(result))) {
           throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
         if (isNaN(Number(_var.value))) {
           throw `Invalid operation '${operator}' for variable with type ${typeof _var.name}`;
         } else {
+          operator = null;
           return (result = (Number(result) - Number(_var.value)).toString());
         }
       }
       if (operator === "*") {
-        operator = null;
         if (isNaN(Number(result))) {
           throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
         if (isNaN(Number(_var.value))) {
           throw `Invalid operation '${operator}' for variable with type ${typeof _var.name}`;
         } else {
+          operator = null;
           return (result = (Number(result) * Number(_var.value)).toString());
         }
       }
       if (operator === "/") {
-        operator = null;
         if (isNaN(Number(result))) {
           throw `Invalid operation '${operator}' operation with type ${typeof result}`;
         }
         if (isNaN(Number(_var.value))) {
           throw `Invalid operation '${operator}' for variable with type ${typeof _var.name}`;
         } else {
+          operator = null;
           return (result = (Number(result) / Number(_var.value)).toString());
         }
       }
@@ -157,6 +157,22 @@ const operate = (_varName: string, instruction: string, process: Process) => {
 
         return (result = (Number(result) - Number(token)).toString());
       }
+       if (operator === "*") {
+        operator = null;
+        if (isNaN(Number(result))) {
+          throw `Invalid operation '${operator}' operation with type ${typeof result}`;
+        }
+
+        return (result = (Number(result) * Number(token)).toString());
+      }
+       if (operator === "/") {
+        operator = null;
+        if (isNaN(Number(result))) {
+          throw `Invalid operation '${operator}' operation with type ${typeof result}`;
+        }
+
+        return (result = (Number(result) / Number(token)).toString());
+      }
     } else if (isString) {
       if (result === "") {
         return (result = clearQuotes(token));
@@ -183,7 +199,7 @@ export default function runProcess(
   steps: ProcessStep[],
   code: string,
   inputVars: Variable[],
- addLog: (log: ProcessLog) => void
+  addLog: (log: ProcessLog) => void
 ) {
   let process = { ..._process };
   if (inputVars) {
@@ -250,27 +266,29 @@ export default function runProcess(
         case "log": {
           const isString = /'(.*?)'/.test(instruction);
           if (isString) {
-           addLog( { 
-                type: "log",
-                value: clearQuotes(instruction),
-              });
+            addLog({
+              type: "log",
+              value: clearQuotes(instruction),
+            });
             break;
           }
           const valueToLog = instruction.split(" ")[0];
 
           if (!isNaN(Number(valueToLog))) {
-           addLog({
-                type: "log",
-                value: valueToLog,
-              });
+            addLog({
+              type: "log",
+              value: valueToLog,
+            });
             break;
           }
           if (getVar(valueToLog, process)) {
-             addLog(  {
-                type: "log",
-                value:  clearQuotes(getVar(valueToLog, process)?.value?.toString() ?? ""),
-              } );
-           
+            addLog({
+              type: "log",
+              value: clearQuotes(
+                getVar(valueToLog, process)?.value?.toString() ?? ""
+              ),
+            });
+
             break;
           }
 
@@ -295,10 +313,13 @@ export default function runProcess(
             if (_callProcess) {
               const _steps = getProcessFlow(code, _callProcess);
 
-              const childProcess = runProcess(_callProcess, _steps, code, [
-                ...process.inputVars,
-                ...process.auxVars,
-              ],addLog);
+              const childProcess = runProcess(
+                _callProcess,
+                _steps,
+                code,
+                [...process.inputVars, ...process.auxVars],
+                addLog
+              );
               const _outputVar = childProcess.outputVars.find(
                 (e) => e.name === varName
               );
@@ -320,11 +341,11 @@ export default function runProcess(
       }
 
       if (error instanceof CatchedError) {
-           addLog  ({
-                type: "catch",
-                value: `CatchedError: ${lastError}`,
-              } );
-           
+        addLog({
+          type: "catch",
+          value: `CatchedError: ${lastError}`,
+        });
+
         lastError = null;
       } else {
         lastError = null;

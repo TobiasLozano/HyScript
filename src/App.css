@@ -9,6 +9,15 @@ main {
 .playground {
   display: grid;
   align-items: flex-start;
+  .example{
+    text-align: start;
+    width: 90%;
+    margin: 10px auto;
+    select{
+      padding: 5px;
+      font-size: medium;
+    }
+  }
 }
 @media (min-width: 600px) {
   .playground { grid-template-columns: 2fr 1fr; }

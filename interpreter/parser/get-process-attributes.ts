@@ -1,4 +1,4 @@
-import { Variable, tagTokenType, Process } from "../types";
+import type { Variable, tagTokenType, Process } from "../types";
 
 export default function getProcessAttributes(
   code: string,
@@ -11,23 +11,24 @@ export default function getProcessAttributes(
   }
   const indexStart = code.indexOf(`<${processName}`);
   const indexClose = code.indexOf(">", indexStart);
-  const openTag = code.slice(indexStart+1, indexClose);
-  
+  const openTag = code.slice(indexStart + 1, indexClose);
+
   const openTagTokens = openTag.split(" ");
   let name = "";
   const outputVars: Variable[] = [];
   const inputVars: Variable[] = [];
   const auxVars: Variable[] = [];
-  let currentTokenType: tagTokenType = "name";
+  let currentTokenType: tagTokenType = "default";
   openTagTokens.forEach((token) => {
-    const regExVarName = /^[a-zA-Z]+$/;
-    if (currentTokenType !== "name" && !regExVarName.test(token)) {
+    const regExVarName = /^[a-zA-Z][a-zA-Z0-9]*$/;
+    console.log(token);
+    if (currentTokenType !== "default" && !regExVarName.test(token)) {
       throw `error in  ${currentTokenType} var with name ${token}`;
     }
     switch (currentTokenType) {
       case "output":
-        if(token==="input"||token==="aux"){
-          break
+        if (token === "input" || token === "aux") {
+          break;
         }
         outputVars.push({
           name: token,
@@ -35,8 +36,8 @@ export default function getProcessAttributes(
         });
         break;
       case "input":
-        if(token==="output"||token==="aux"){
-          break
+        if (token === "output" || token === "aux") {
+          break;
         }
         inputVars.push({
           name: token,
@@ -44,15 +45,15 @@ export default function getProcessAttributes(
         });
         break;
       case "aux":
-          if(token==="input"||token==="output"){
-          break
+        if (token === "input" || token === "output") {
+          break;
         }
         auxVars.push({
           name: token,
           value: null,
         });
         break;
-      case "name":
+      case "default":
         if (!name) name = token;
         break;
 

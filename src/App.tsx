@@ -2,7 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { runEsolang } from "../interpreter/index";
 import "./App.css";
 import type { ProcessLog } from "../interpreter/types";
-import { baseExample } from "./examples";
+import { baseExample, codeExamples } from "./examples";
 
 function App() {
   const [logs, setLogs] = useState<ProcessLog[]>([]);
@@ -25,7 +25,7 @@ function App() {
   
   const writeCommand = async () => {
     setCommand("");
-    const text = "run index.hs";
+    const text = "run index.hy";
     const letters = text.split("");
     for (let i = 0; i < letters.length; i++) {
       const letter = letters[i];
@@ -50,6 +50,26 @@ function App() {
       <h2>HyScript playground</h2>
       <div className="playground">
         <div className="editor">
+        <div className="example">
+         
+         
+         {/* code examples select */}
+         <select name="" id="" onChange={(e) => {
+            setCode(e.target.value);
+          }}>
+          {codeExamples.map((example) => {
+            return (
+              <option
+                key={example.name}
+                value={example.code}
+                selected={example.code === code}
+              >
+                {example.name}
+              </option>
+            );
+          })}
+         </select>
+        </div>
           <div className="code">
             <textarea rows={20} style={{ width: "90%" }} value={code} onChange={handleCode}></textarea>
           </div>
@@ -57,7 +77,7 @@ function App() {
         </div>
         <div className="output">
           <div className="command">
-            <span className="machine">tobias@thinkbook-g6</span>
+            <span className="machine">hyscript@machine</span>
             <span className="decorator">{" ~ "}</span>
             <span className="detail">{command}</span>
           </div>

@@ -1,4 +1,4 @@
-export type tagTokenType = "name" | "input" | "output" | "aux";
+export type tagTokenType = "default" | "input" | "output" | "aux";
 export interface Variable {
   name: string;
   value: string | number | boolean | null;
